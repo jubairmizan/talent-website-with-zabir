@@ -82,10 +82,10 @@
                         Notificaties
                     </button>
                     <!-- <button
-                                                              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-pink-500 to-orange-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                                                              <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                                                              Nieuwe Boeking
-                                                            </button> -->
+                                                                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-pink-500 to-orange-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                                                  <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                                                  Nieuwe Boeking
+                                                                </button> -->
                 </div>
             </div>
 
@@ -103,15 +103,15 @@
                         <button id="tab-overview" onclick="switchTab('overview')"
                             class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-background text-foreground shadow-sm">Overzicht</button>
                         <!-- <button id="tab-bookings" onclick="switchTab('bookings')"
-                                                              class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Boekingen</button> -->
+                                                                  class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Boekingen</button> -->
                         <button id="tab-favorites" data-tab="favorites" onclick="switchTab('favorites')"
                             class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Favorieten</button>
                         <!-- <button id="tab-reviews" onclick="switchTab('reviews')"
-                                                              class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Reviews</button> -->
+                                                                  class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Reviews</button> -->
                         <button id="tab-profile" data-tab="profile" onclick="switchTab('profile')"
                             class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Profiel</button>
                         <!-- <button id="tab-messages" onclick="switchTab('messages')"
-                                                              class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Berichten</button> -->
+                                                                  class="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">Berichten</button> -->
                     </div>
 
                     <!-- Overview Tab -->
@@ -119,28 +119,28 @@
                         <!-- Stats Cards -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
                             <!-- <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                                                <div class="p-6">
-                                                                  <div class="flex items-center justify-between">
-                                                                    <div>
-                                                                      <p class="text-sm text-gray-600">Totaal Boekingen</p>
-                                                                      <p class="text-2xl font-bold">{{ $userStats['totalBookings'] }}</p>
+                                                                    <div class="p-6">
+                                                                      <div class="flex items-center justify-between">
+                                                                        <div>
+                                                                          <p class="text-sm text-gray-600">Totaal Boekingen</p>
+                                                                          <p class="text-2xl font-bold">{{ $userStats['totalBookings'] }}</p>
+                                                                        </div>
+                                                                        <i data-lucide="calendar" class="w-8 h-8 text-blue-500"></i>
+                                                                      </div>
                                                                     </div>
-                                                                    <i data-lucide="calendar" class="w-8 h-8 text-blue-500"></i>
                                                                   </div>
-                                                                </div>
-                                                              </div>
 
-                                                              <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                                                <div class="p-6">
-                                                                  <div class="flex items-center justify-between">
-                                                                    <div>
-                                                                      <p class="text-sm text-gray-600">Voltooid</p>
-                                                                      <p class="text-2xl font-bold">{{ $userStats['completedBookings'] }}</p>
+                                                                  <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                                                                    <div class="p-6">
+                                                                      <div class="flex items-center justify-between">
+                                                                        <div>
+                                                                          <p class="text-sm text-gray-600">Voltooid</p>
+                                                                          <p class="text-2xl font-bold">{{ $userStats['completedBookings'] }}</p>
+                                                                        </div>
+                                                                        <i data-lucide="star" class="w-8 h-8 text-green-500"></i>
+                                                                      </div>
                                                                     </div>
-                                                                    <i data-lucide="star" class="w-8 h-8 text-green-500"></i>
-                                                                  </div>
-                                                                </div>
-                                                              </div> -->
+                                                                  </div> -->
 
                             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                                 <div class="p-6">
@@ -171,53 +171,53 @@
                         <!-- Recent Activity -->
                         <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
                             <!-- <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                                                <div class="flex flex-col space-y-1.5 p-6 border-b border-border">
-                                                                  <h3 class="text-2xl font-semibold leading-none tracking-tight">Aankomende Boekingen</h3>
-                                                                </div>
-                                                                <div class="p-6">
-                                                                  <div class="space-y-4">
-                                                                    @foreach ($bookings as $booking)
+                                                                    <div class="flex flex-col space-y-1.5 p-6 border-b border-border">
+                                                                      <h3 class="text-2xl font-semibold leading-none tracking-tight">Aankomende Boekingen</h3>
+                                                                    </div>
+                                                                    <div class="p-6">
+                                                                      <div class="space-y-4">
+                                                                        @foreach ($bookings as $booking)
     @if ($booking['status'] !== 'completed')
     <div class="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-                                                                          <div class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full">
-                                                                            <img src="{{ $booking['creatorImage'] }}" alt="{{ $booking['creator'] }}" class="aspect-square h-full w-full" />
-                                                                          </div>
-                                                                          <div class="flex-1">
-                                                                            <p class="font-semibold">{{ $booking['creator'] }}</p>
-                                                                            <p class="text-sm text-gray-600">{{ $booking['service'] }}</p>
-                                                                            <div class="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                                                                              <span class="flex items-center gap-1">
-                                                                                <i data-lucide="calendar" class="w-3 h-3"></i>
-                                                                                {{ $booking['date'] }}
-                                                                              </span>
-                                                                              <span class="flex items-center gap-1">
-                                                                                <i data-lucide="clock" class="w-3 h-3"></i>
-                                                                                {{ $booking['time'] }}
-                                                                              </span>
-                                                                              <span class="flex items-center gap-1">
-                                                                                <i data-lucide="map-pin" class="w-3 h-3"></i>
-                                                                                {{ $booking['location'] }}
-                                                                              </span>
-                                                                            </div>
-                                                                          </div>
-                                                                          <div class="text-right">
-                                                                            <div
-                                                                              class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
+                                                                              <div class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full">
+                                                                                <img src="{{ $booking['creatorImage'] }}" alt="{{ $booking['creator'] }}" class="aspect-square h-full w-full" />
+                                                                              </div>
+                                                                              <div class="flex-1">
+                                                                                <p class="font-semibold">{{ $booking['creator'] }}</p>
+                                                                                <p class="text-sm text-gray-600">{{ $booking['service'] }}</p>
+                                                                                <div class="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                                                                                  <span class="flex items-center gap-1">
+                                                                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                                                                    {{ $booking['date'] }}
+                                                                                  </span>
+                                                                                  <span class="flex items-center gap-1">
+                                                                                    <i data-lucide="clock" class="w-3 h-3"></i>
+                                                                                    {{ $booking['time'] }}
+                                                                                  </span>
+                                                                                  <span class="flex items-center gap-1">
+                                                                                    <i data-lucide="map-pin" class="w-3 h-3"></i>
+                                                                                    {{ $booking['location'] }}
+                                                                                  </span>
+                                                                                </div>
+                                                                              </div>
+                                                                              <div class="text-right">
+                                                                                <div
+                                                                                  class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
                             @if ($booking['status'] === 'confirmed') border-transparent bg-secondary text-secondary-foreground @else text-foreground @endif">
-                                                                              @if ($booking['status'] === 'confirmed')
+                                                                                  @if ($booking['status'] === 'confirmed')
     Bevestigd
 @else
     In behandeling
     @endif
+                                                                                </div>
+                                                                                <p class="text-sm font-semibold mt-1">€{{ $booking['amount'] }}</p>
+                                                                              </div>
                                                                             </div>
-                                                                            <p class="text-sm font-semibold mt-1">€{{ $booking['amount'] }}</p>
-                                                                          </div>
-                                                                        </div>
     @endif
     @endforeach
-                                                                  </div>
-                                                                </div>
-                                                              </div> -->
+                                                                      </div>
+                                                                    </div>
+                                                                  </div> -->
 
                             <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                                 <div class="flex flex-col space-y-1.5 p-6 border-b border-border">
@@ -265,86 +265,86 @@
 
                     <!-- Bookings Tab -->
                     <!-- <div id="content-bookings" class="tab-content space-y-6 hidden">
-                                                            <div class="flex items-center justify-between">
-                                                              <h2 class="text-2xl font-bold">Mijn Boekingen</h2>
-                                                              <div class="flex gap-2">
-                                                                <button
-                                                                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                                                                  <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
-                                                                  Filter
-                                                                </button>
-                                                                <button
-                                                                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-pink-500 to-orange-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                                                                  <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
-                                                                  Nieuwe Boeking
-                                                                </button>
-                                                              </div>
-                                                            </div>
+                                                                <div class="flex items-center justify-between">
+                                                                  <h2 class="text-2xl font-bold">Mijn Boekingen</h2>
+                                                                  <div class="flex gap-2">
+                                                                    <button
+                                                                      class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                                                                      <i data-lucide="filter" class="w-4 h-4 mr-2"></i>
+                                                                      Filter
+                                                                    </button>
+                                                                    <button
+                                                                      class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-pink-500 to-orange-500 text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                                                                      <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                                                                      Nieuwe Boeking
+                                                                    </button>
+                                                                  </div>
+                                                                </div>
 
-                                                            <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-                                                              <div class="p-0">
-                                                                <div class="space-y-4 p-6">
-                                                                  @foreach ($bookings as $booking)
+                                                                <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                                                                  <div class="p-0">
+                                                                    <div class="space-y-4 p-6">
+                                                                      @foreach ($bookings as $booking)
     <div class="flex items-center justify-between p-6 border rounded-lg hover:shadow-md transition-shadow">
-                                                                      <div class="flex items-center gap-4">
-                                                                        <div class="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full">
-                                                                          <img src="{{ $booking['creatorImage'] }}" alt="{{ $booking['creator'] }}" class="aspect-square h-full w-full" />
-                                                                        </div>
-                                                                        <div>
-                                                                          <p class="font-semibold text-lg">{{ $booking['creator'] }}</p>
-                                                                          <p class="text-gray-600">{{ $booking['service'] }}</p>
-                                                                          <div class="flex items-center gap-4 text-sm text-gray-500 mt-2">
-                                                                            <span class="flex items-center gap-1">
-                                                                              <i data-lucide="calendar" class="w-4 h-4"></i>
-                                                                              {{ $booking['date'] }}
-                                                                            </span>
-                                                                            <span class="flex items-center gap-1">
-                                                                              <i data-lucide="clock" class="w-4 h-4"></i>
-                                                                              {{ $booking['time'] }}
-                                                                            </span>
-                                                                            <span class="flex items-center gap-1">
-                                                                              <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                                                              {{ $booking['location'] }}
-                                                                            </span>
+                                                                          <div class="flex items-center gap-4">
+                                                                            <div class="relative flex h-16 w-16 shrink-0 overflow-hidden rounded-full">
+                                                                              <img src="{{ $booking['creatorImage'] }}" alt="{{ $booking['creator'] }}" class="aspect-square h-full w-full" />
+                                                                            </div>
+                                                                            <div>
+                                                                              <p class="font-semibold text-lg">{{ $booking['creator'] }}</p>
+                                                                              <p class="text-gray-600">{{ $booking['service'] }}</p>
+                                                                              <div class="flex items-center gap-4 text-sm text-gray-500 mt-2">
+                                                                                <span class="flex items-center gap-1">
+                                                                                  <i data-lucide="calendar" class="w-4 h-4"></i>
+                                                                                  {{ $booking['date'] }}
+                                                                                </span>
+                                                                                <span class="flex items-center gap-1">
+                                                                                  <i data-lucide="clock" class="w-4 h-4"></i>
+                                                                                  {{ $booking['time'] }}
+                                                                                </span>
+                                                                                <span class="flex items-center gap-1">
+                                                                                  <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                                                                  {{ $booking['location'] }}
+                                                                                </span>
+                                                                              </div>
+                                                                            </div>
                                                                           </div>
-                                                                        </div>
-                                                                      </div>
-                                                                      <div class="flex items-center gap-4">
-                                                                        <div class="text-right">
-                                                                          <div
-                                                                            class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
+                                                                          <div class="flex items-center gap-4">
+                                                                            <div class="text-right">
+                                                                              <div
+                                                                                class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold
                           @if ($booking['status'] === 'completed') border-transparent bg-primary text-primary-foreground
                           @elseif($booking['status'] === 'confirmed') border-transparent bg-secondary text-secondary-foreground
                           @else text-foreground @endif">
-                                                                            @if ($booking['status'] === 'completed')
+                                                                                @if ($booking['status'] === 'completed')
     Voltooid
 @elseif($booking['status'] === 'confirmed')
     Bevestigd
 @else
     In behandeling
     @endif
-                                                                          </div>
-                                                                          <p class="font-semibold text-lg mt-1">€{{ $booking['amount'] }}</p>
-                                                                        </div>
-                                                                        <div class="flex gap-2">
-                                                                          <button
-                                                                            class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
-                                                                            <i data-lucide="message-square" class="w-4 h-4"></i>
-                                                                          </button>
-                                                                          @if ($booking['status'] === 'completed')
+                                                                              </div>
+                                                                              <p class="font-semibold text-lg mt-1">€{{ $booking['amount'] }}</p>
+                                                                            </div>
+                                                                            <div class="flex gap-2">
+                                                                              <button
+                                                                                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                                                                                <i data-lucide="message-square" class="w-4 h-4"></i>
+                                                                              </button>
+                                                                              @if ($booking['status'] === 'completed')
     <button
-                                                                              class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
-                                                                              <i data-lucide="star" class="w-4 h-4"></i>
-                                                                            </button>
+                                                                                  class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
+                                                                                  <i data-lucide="star" class="w-4 h-4"></i>
+                                                                                </button>
     @endif
+                                                                            </div>
+                                                                          </div>
                                                                         </div>
-                                                                      </div>
-                                                                    </div>
     @endforeach
+                                                                    </div>
+                                                                  </div>
                                                                 </div>
-                                                              </div>
-                                                            </div>
-                                                          </div> -->
+                                                              </div> -->
 
                     <!-- Favorites Tab -->
                     <div id="content-favorites" class="tab-content space-y-6 hidden">
@@ -1198,5 +1198,5 @@
     </script>
 
     <!-- Chat Interface for authenticated users -->
-    <x-chat-interface />
+    {{-- <x-chat-interface /> --}}
 @endsection
