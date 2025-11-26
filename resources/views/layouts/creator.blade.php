@@ -360,6 +360,17 @@
   </script>
 
   @stack('scripts')
+  @auth
+    <script>
+      window.Laravel = {
+        user: {
+          id: {{ auth()->id() }},
+          name: "{{ auth()->user()->name }}",
+          role: "{{ auth()->user()->role }}"
+        }
+      };
+    </script>
+  @endauth
 </body>
 
 </html>

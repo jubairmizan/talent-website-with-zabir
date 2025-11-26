@@ -86,7 +86,7 @@ class ConversationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error getting/creating conversation: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to start conversation. Please try again.'
@@ -160,7 +160,7 @@ class ConversationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error fetching conversations: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching conversations'
@@ -197,7 +197,7 @@ class ConversationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error toggling conversation block: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to update conversation status.'
@@ -234,7 +234,7 @@ class ConversationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error deleting conversation: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to delete conversation.'

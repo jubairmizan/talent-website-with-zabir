@@ -2,63 +2,63 @@
 <div id="chat-interface" class="fixed bottom-20 right-4 w-96 bg-white rounded-lg shadow-xl z-[100] hidden transform translate-y-full transition-all duration-300 ease-in-out">
     <div class="flex flex-col h-[600px] border border-gray-200 rounded-lg">
         <!-- Chat Header -->
-        <div id="chat-header" class="flex items-center justify-between p-4 border-b bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-t-lg">
+        <div id="chat-header" class="flex justify-between items-center p-4 text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-t-lg border-b">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <div class="flex justify-center items-center w-10 h-10 rounded-full bg-white/20">
                     <i data-lucide="user" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <h3 id="chat-participant-name" class="font-semibold text-lg">Select a conversation</h3>
+                    <h3 id="chat-participant-name" class="text-lg font-semibold">Select a conversation</h3>
                     <p id="chat-status" class="text-xs opacity-90">Online</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2">
-                <button id="chat-minimize" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <button id="chat-minimize" class="p-2 rounded-full transition-colors hover:bg-white/10">
                     <i data-lucide="minus" class="w-4 h-4"></i>
                 </button>
-                <button id="chat-close" class="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <button id="chat-close" class="p-2 rounded-full transition-colors hover:bg-white/10">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
         </div>
 
         <!-- Messages Container -->
-        <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-            <div id="loading-messages" class="flex items-center justify-center py-8 hidden">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+        <div id="messages-container" class="overflow-y-auto flex-1 p-4 space-y-4 bg-gray-50">
+            <div id="loading-messages" class="flex hidden justify-center items-center py-8">
+                <div class="w-8 h-8 rounded-full border-b-2 border-pink-500 animate-spin"></div>
                 <span class="ml-2 text-gray-600">Loading messages...</span>
             </div>
             <div id="messages-list" class="space-y-4">
                 <!-- Messages will be dynamically loaded here -->
             </div>
-            <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div id="error-message" class="hidden px-4 py-3 text-red-700 bg-red-100 rounded border border-red-400">
                 <span id="error-text"></span>
             </div>
         </div>
 
         <!-- Message Input -->
-        <div id="message-input-container" class="border-t bg-white p-4">
+        <div id="message-input-container" class="p-4 bg-white border-t">
             <form id="message-form" class="flex items-end space-x-2">
                 <div class="flex-1">
-                    <textarea 
-                        id="message-input" 
-                        placeholder="Type your message..." 
-                        class="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                    <textarea
+                        id="message-input"
+                        placeholder="Type your message..."
+                        class="p-3 w-full rounded-lg border border-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                         rows="1"
                         maxlength="1000"
                     ></textarea>
                     <div class="flex justify-between items-center mt-1">
                         <span id="char-count" class="text-xs text-gray-500">0/1000</span>
-                        <div id="typing-indicator" class="text-xs text-gray-500 hidden">
-                            <i data-lucide="more-horizontal" class="w-3 h-3 inline animate-pulse"></i>
+                        <div id="typing-indicator" class="hidden text-xs text-gray-500">
+                            <i data-lucide="more-horizontal" class="inline w-3 h-3 animate-pulse"></i>
                             Typing...
                         </div>
                     </div>
                 </div>
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     id="send-button"
-                    class="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-3 rounded-lg hover:from-pink-600 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="p-3 text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg transition-all duration-200 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled
                 >
                     <i data-lucide="send" class="w-5 h-5"></i>
@@ -71,7 +71,7 @@
 <!-- Chat Toggle Button -->
 <button id="chat-toggle" class="fixed bottom-4 right-4 z-[99] bg-gradient-to-r from-pink-500 to-purple-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
     <i data-lucide="message-circle" class="w-6 h-6"></i>
-    <span id="unread-badge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center hidden">0</span>
+    <span id="unread-badge" class="flex hidden absolute -top-2 -right-2 justify-center items-center w-6 h-6 text-xs text-white bg-red-500 rounded-full">0</span>
 </button>
 
 <style>
@@ -272,19 +272,21 @@ class ChatInterface {
         this.isOnline = navigator.onLine;
         this.retryAttempts = 0;
         this.maxRetryAttempts = 3;
-        
+        this.onlineUsers = new Map();
+
         this.initializeElements();
         this.bindEvents();
         this.setupAutoResize();
         this.loadUnreadCount();
         this.setupNetworkMonitoring();
-        
+
         // Initialize Echo for real-time messaging (if available)
         if (typeof Echo !== 'undefined') {
             this.initializeEcho();
+            this.initializePresence();
         }
     }
-    
+
     initializeElements() {
         this.chatInterface = document.getElementById('chat-interface');
         this.chatToggle = document.getElementById('chat-toggle');
@@ -303,7 +305,7 @@ class ChatInterface {
         this.errorMessage = document.getElementById('error-message');
         this.errorText = document.getElementById('error-text');
     }
-    
+
     bindEvents() {
         this.chatToggle.addEventListener('click', () => this.toggle());
         this.chatClose.addEventListener('click', () => this.hide());
@@ -312,34 +314,34 @@ class ChatInterface {
         this.messageInput.addEventListener('input', () => this.updateCharCount());
         this.messageInput.addEventListener('keydown', (e) => this.handleKeyDown(e));
     }
-    
+
     setupAutoResize() {
         this.messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
     }
-    
+
     setupNetworkMonitoring() {
         window.addEventListener('online', () => {
             this.isOnline = true;
             this.hideError();
             this.updateConnectionStatus();
         });
-        
+
         window.addEventListener('offline', () => {
             this.isOnline = false;
             this.showError('You are offline. Messages will be sent when connection is restored.');
             this.updateConnectionStatus();
         });
     }
-    
+
     updateConnectionStatus() {
         if (this.chatStatus) {
             this.chatStatus.textContent = this.isOnline ? 'Online' : 'Offline';
         }
     }
-    
+
     toggle() {
         if (this.isVisible) {
             this.hide();
@@ -347,7 +349,7 @@ class ChatInterface {
             this.show();
         }
     }
-    
+
     show() {
         this.isVisible = true;
         this.isMinimized = false;
@@ -356,8 +358,12 @@ class ChatInterface {
             this.chatInterface.classList.remove('translate-y-full');
         }, 10);
         this.messageInput.focus();
+
+        if (!this.currentConversationId && window.Laravel?.user?.role === 'creator') {
+            this.openLatestConversationForCreator();
+        }
     }
-    
+
     hide() {
         this.isVisible = false;
         this.chatInterface.classList.add('translate-y-full');
@@ -365,7 +371,7 @@ class ChatInterface {
             this.chatInterface.classList.add('hidden');
         }, 300);
     }
-    
+
     minimize() {
         this.isMinimized = !this.isMinimized;
         if (this.isMinimized) {
@@ -378,13 +384,13 @@ class ChatInterface {
             document.getElementById('message-input-container').style.display = 'block';
         }
     }
-    
+
     async openConversation(creatorId, creatorName = null) {
         if (!creatorId) {
             this.handleError(new Error('Creator ID is required'), 'open_conversation');
             return;
         }
-        
+
         try {
             // Check if creator is available (optional check)
             const isAvailable = await this.checkCreatorAvailability(creatorId);
@@ -392,34 +398,45 @@ class ChatInterface {
                 this.showNotification('This creator is currently unavailable for chat.', 'info');
                 return;
             }
-            
+
             this.show();
             this.showLoading();
             this.hideError();
-            
+
             // Set participant info
             this.currentParticipant = { id: creatorId, name: creatorName };
             if (creatorName) {
                 this.participantName.textContent = creatorName;
             }
-            
-            // Get or create conversation
-            const conversation = await this.getOrCreateConversation(creatorId);
-            
+
+            let conversation = null;
+            if (window.Laravel?.user?.role === 'member') {
+                conversation = await this.getOrCreateConversation(creatorId);
+            } else {
+                // For creators, find existing conversation with this participant
+                const conv = await this.findConversationWithParticipant(creatorId);
+                if (!conv) {
+                    this.showNotification('No existing conversation with this member.', 'error');
+                    return;
+                }
+                conversation = conv;
+            }
+
             if (conversation) {
                 this.currentConversationId = conversation.id;
-                this.participantName.textContent = conversation.creator_name || creatorName || 'Creator';
-                this.chatStatus.textContent = 'Online';
-                
+                const name = conversation.creator_name || conversation.participant_name || creatorName || 'User';
+                this.participantName.textContent = name;
+                this.updateParticipantStatus();
+
                 // Load messages for this conversation
                 await this.loadMessages();
-                
+
                 // Join real-time channel
                 this.joinConversationChannel();
-                
+
                 this.showNotification('Chat opened successfully!', 'success');
             }
-            
+
         } catch (error) {
             console.error('Error opening conversation:', error);
             this.handleError(error, 'open_conversation');
@@ -428,7 +445,24 @@ class ChatInterface {
             this.hideLoading();
         }
     }
-    
+
+    async findConversationWithParticipant(participantId) {
+        try {
+            const response = await fetch('/conversations', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            const list = data.conversations || [];
+            return list.find(c => String(c.participant_id) === String(participantId)) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     async getOrCreateConversation(creatorId) {
         try {
             const response = await fetch('/conversations/get-or-create', {
@@ -440,49 +474,49 @@ class ChatInterface {
                 },
                 body: JSON.stringify({ creator_id: creatorId })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw { response: { status: response.status, data: errorData } };
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 return data.conversation;
             } else {
                 throw new Error(data.message || 'Failed to create conversation');
             }
-            
+
         } catch (error) {
             this.handleError(error, 'get_or_create_conversation');
             throw error;
         }
     }
-    
+
     async loadMessages() {
         if (!this.currentConversationId) {
             this.showError('No conversation selected');
             return;
         }
-        
+
         try {
             this.showLoading();
-            
+
             const response = await fetch(`/conversations/${this.currentConversationId}/messages`, {
                 headers: {
                     'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
                 throw { response: { status: response.status, data: errorData } };
             }
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 this.messages = data.messages || [];
                 this.renderMessages();
@@ -498,17 +532,17 @@ class ChatInterface {
             this.hideLoading();
         }
     }
-    
+
     renderMessages() {
         if (!this.messagesList) return;
-        
+
         const currentUserId = window.Laravel?.user?.id;
-        
+
         this.messagesList.innerHTML = this.messages.map(message => {
             const isSent = message.sender_id == currentUserId;
             const messageClass = isSent ? 'sent' : 'received';
             const timeAgo = this.formatTimeAgo(new Date(message.created_at));
-            
+
             return `
                 <div class="message ${messageClass}">
                     <div class="message-content">
@@ -516,46 +550,46 @@ class ChatInterface {
                     </div>
                     <div class="message-time">
                         ${timeAgo}
-                        ${isSent ? (message.is_read ? '<i data-lucide="check-check" class="w-3 h-3 inline ml-1"></i>' : '<i data-lucide="check" class="w-3 h-3 inline ml-1"></i>') : ''}
+                        ${isSent ? (message.is_read ? '<i data-lucide="check-check" class="inline ml-1 w-3 h-3"></i>' : '<i data-lucide="check" class="inline ml-1 w-3 h-3"></i>') : ''}
                     </div>
                 </div>
             `;
         }).join('');
-        
+
         // Re-initialize Lucide icons
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     }
-    
+
     async sendMessage(e) {
         e.preventDefault();
-        
+
         const messageText = this.messageInput.value.trim();
         if (!messageText || !this.currentConversationId) return;
-        
+
         if (!this.isOnline) {
             this.showError('You are offline. Please check your internet connection.');
             return;
         }
-        
+
         // Check if user is authenticated
         if (!window.Laravel?.user?.id) {
             this.showError('You must be logged in to send messages.');
             return;
         }
-        
+
         // Disable input while sending
         this.messageInput.disabled = true;
         this.sendButton.disabled = true;
-        
+
         try {
             console.log('Sending message:', {
                 conversationId: this.currentConversationId,
                 message: messageText,
                 userId: window.Laravel?.user?.id
             });
-            
+
             // Add message to UI immediately (optimistic update)
             const tempMessage = {
                 id: 'temp-' + Date.now(),
@@ -564,21 +598,21 @@ class ChatInterface {
                 created_at: new Date().toISOString(),
                 is_read: false
             };
-            
+
             this.messages.push(tempMessage);
             this.renderMessages();
             this.scrollToBottom();
-            
+
             // Clear input
             this.messageInput.value = '';
             this.updateCharCount();
-            
+
             // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             if (!csrfToken) {
                 throw new Error('CSRF token not found. Please refresh the page.');
             }
-            
+
             // Send to server
             const response = await fetch(`/conversations/${this.currentConversationId}/messages`, {
                 method: 'POST',
@@ -589,27 +623,27 @@ class ChatInterface {
                 },
                 body: JSON.stringify({ message: messageText })
             });
-            
+
             console.log('Response status:', response.status);
             console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error response:', errorText);
-                
+
                 let errorData = {};
                 try {
                     errorData = JSON.parse(errorText);
                 } catch (e) {
                     errorData = { message: `HTTP ${response.status}: ${errorText}` };
                 }
-                
+
                 throw { response: { status: response.status, data: errorData } };
             }
-            
+
             const data = await response.json();
             console.log('Success response:', data);
-            
+
             if (data.success) {
                 // Replace temp message with real message
                 const tempIndex = this.messages.findIndex(m => m.id === tempMessage.id);
@@ -622,14 +656,14 @@ class ChatInterface {
             } else {
                 throw new Error(data.message || 'Failed to send message');
             }
-            
+
         } catch (error) {
             console.error('Error sending message:', error);
-            
+
             // Remove temp message on error
             this.messages = this.messages.filter(m => m.id !== tempMessage.id);
             this.renderMessages();
-            
+
             // Show detailed error message
             let errorMessage = 'Failed to send message.';
             if (error.response?.status === 401) {
@@ -643,12 +677,12 @@ class ChatInterface {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             // Handle retry logic
             if (this.retryAttempts < this.maxRetryAttempts && error.response?.status !== 401 && error.response?.status !== 403) {
                 this.retryAttempts++;
                 this.showError(`${errorMessage} Retrying... (${this.retryAttempts}/${this.maxRetryAttempts})`);
-                
+
                 // Retry after delay
                 setTimeout(() => {
                     this.messageInput.value = messageText;
@@ -659,7 +693,7 @@ class ChatInterface {
                 this.messageInput.value = messageText; // Restore message text
                 this.retryAttempts = 0;
             }
-            
+
         } finally {
             // Re-enable input
             this.messageInput.disabled = false;
@@ -667,10 +701,10 @@ class ChatInterface {
             this.messageInput.focus();
         }
     }
-    
+
     async markMessagesAsRead() {
         if (!this.currentConversationId) return;
-        
+
         try {
             await fetch(`/conversations/${this.currentConversationId}/messages/mark-read`, {
                 method: 'PATCH',
@@ -679,15 +713,15 @@ class ChatInterface {
                     'Accept': 'application/json'
                 }
             });
-            
+
             // Update unread count
             this.loadUnreadCount();
-            
+
         } catch (error) {
             console.error('Error marking messages as read:', error);
         }
     }
-    
+
     async loadUnreadCount() {
         try {
             const response = await fetch('/messages/unread-count', {
@@ -696,21 +730,21 @@ class ChatInterface {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success) {
                 this.updateUnreadBadge(data.count);
             }
-            
+
         } catch (error) {
             console.error('Error loading unread count:', error);
         }
     }
-    
+
     updateUnreadBadge(count) {
         this.unreadCount = count;
-        
+
         if (count > 0) {
             this.unreadBadge.textContent = count > 99 ? '99+' : count;
             this.unreadBadge.classList.remove('hidden');
@@ -718,67 +752,93 @@ class ChatInterface {
             this.unreadBadge.classList.add('hidden');
         }
     }
-    
+
     updateCharCount() {
         const length = this.messageInput.value.length;
         this.charCount.textContent = `${length}/1000`;
-        
+
         // Enable/disable send button
         this.sendButton.disabled = length === 0 || length > 1000;
     }
-    
+
     handleKeyDown(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             this.sendMessage(e);
         }
     }
-    
+
     scrollToBottom() {
         if (this.messagesContainer) {
             this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
         }
     }
-    
+
     showLoading() {
         if (this.loadingMessages) {
             this.loadingMessages.classList.remove('hidden');
         }
     }
-    
+
     hideLoading() {
         if (this.loadingMessages) {
             this.loadingMessages.classList.add('hidden');
         }
     }
-    
+
     showError(message) {
         if (this.errorMessage && this.errorText) {
             this.errorText.textContent = message;
             this.errorMessage.classList.remove('hidden');
-            
+
             // Auto-hide error after 5 seconds
             setTimeout(() => {
                 this.hideError();
             }, 5000);
         }
     }
-    
+
     hideError() {
         if (this.errorMessage) {
             this.errorMessage.classList.add('hidden');
         }
     }
-    
+
     initializeEcho() {
         if (typeof Echo === 'undefined') {
             console.warn('Laravel Echo not available for real-time messaging');
             return;
         }
-        
+
         console.log('Echo real-time messaging ready');
     }
-    
+
+    initializePresence() {
+        if (typeof Echo === 'undefined') return;
+        Echo.join('online')
+            .here((users) => {
+                this.onlineUsers.clear();
+                users.forEach(u => this.onlineUsers.set(u.id, u));
+                this.updateParticipantStatus();
+            })
+            .joining((user) => {
+                this.onlineUsers.set(user.id, user);
+                this.updateParticipantStatus();
+            })
+            .leaving((user) => {
+                this.onlineUsers.delete(user.id);
+                this.updateParticipantStatus();
+            });
+    }
+
+    updateParticipantStatus() {
+        if (!this.currentParticipant) return;
+        const isParticipantOnline = this.onlineUsers.has(this.currentParticipant.id);
+        if (this.chatStatus) {
+            this.chatStatus.textContent = isParticipantOnline ? 'Online' : 'Offline';
+        }
+    }
+
     joinConversationChannel() {
         if (typeof Echo !== 'undefined' && this.currentConversationId) {
             Echo.private(`conversation.${this.currentConversationId}`)
@@ -787,7 +847,7 @@ class ChatInterface {
                     this.messages.push(e.message);
                     this.renderMessages();
                     this.scrollToBottom();
-                    
+
                     // Update unread count if chat is not visible
                     if (!this.isVisible) {
                         this.updateUnreadBadge(this.unreadCount + 1);
@@ -798,30 +858,30 @@ class ChatInterface {
                 });
         }
     }
-    
+
     formatTimeAgo(date) {
         const now = new Date();
         const diffInSeconds = Math.floor((now - date) / 1000);
-        
+
         if (diffInSeconds < 60) return 'Just now';
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
         if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-        
+
         return date.toLocaleDateString();
     }
-    
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-    
+
     // Error handling
     handleError(error, context = 'chat') {
         console.error(`Chat error (${context}):`, error);
-        
+
         let message = 'An error occurred. Please try again.';
-        
+
         if (error.response) {
             // HTTP error responses
             switch (error.response.status) {
@@ -866,7 +926,7 @@ class ChatInterface {
             // Other errors
             message = error.message;
         }
-        
+
         this.showNotification(message, 'error');
     }
 
@@ -876,9 +936,9 @@ class ChatInterface {
         const notification = document.createElement('div');
         notification.className = `chat-notification chat-notification-${type}`;
         notification.innerHTML = `
-            <div class="flex items-center justify-between p-3 rounded-lg shadow-lg">
+            <div class="flex justify-between items-center p-3 rounded-lg shadow-lg">
                 <div class="flex items-center">
-                    <i data-lucide="${type === 'error' ? 'alert-circle' : type === 'success' ? 'check-circle' : 'info'}" class="w-5 h-5 mr-2"></i>
+                    <i data-lucide="${type === 'error' ? 'alert-circle' : type === 'success' ? 'check-circle' : 'info'}" class="mr-2 w-5 h-5"></i>
                     <span>${message}</span>
                 </div>
                 <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-400 hover:text-gray-600">
@@ -886,7 +946,7 @@ class ChatInterface {
                 </button>
             </div>
         `;
-        
+
         // Add styles
         notification.style.cssText = `
             position: fixed;
@@ -900,15 +960,15 @@ class ChatInterface {
             border-radius: 0.5rem;
             animation: slideInRight 0.3s ease-out;
         `;
-        
+
         // Add to page
         document.body.appendChild(notification);
-        
+
         // Re-initialize Lucide icons for the notification
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
-        
+
         // Auto remove after 5 seconds
         setTimeout(() => {
             if (notification.parentElement) {
@@ -927,11 +987,11 @@ class ChatInterface {
                     'Accept': 'application/json'
                 }
             });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to check creator availability');
             }
-            
+
             const data = await response.json();
             return data.available;
         } catch (error) {
@@ -943,7 +1003,7 @@ class ChatInterface {
     // Handle network connectivity issues
     handleNetworkError() {
         this.showNotification('Connection lost. Trying to reconnect...', 'error');
-        
+
         // Try to reconnect Echo if it exists
         if (window.Echo) {
             try {
@@ -957,6 +1017,32 @@ class ChatInterface {
             } catch (error) {
                 console.error('Failed to reconnect Echo:', error);
             }
+        }
+    }
+
+    async openLatestConversationForCreator() {
+        try {
+            const response = await fetch('/conversations', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            const list = Array.isArray(data.conversations) ? data.conversations : [];
+            if (!list.length) return;
+
+            const c = list[0];
+            this.currentConversationId = c.id;
+            this.currentParticipant = { id: c.participant_id, name: c.participant_name };
+            if (c.participant_name) {
+                this.participantName.textContent = c.participant_name;
+            }
+            this.updateParticipantStatus();
+            await this.loadMessages();
+            this.joinConversationChannel();
+        } catch (e) {
         }
     }
 }
@@ -976,5 +1062,23 @@ function openConversation(creatorId, creatorName = null) {
         console.error('Chat system is not available. Please refresh the page.');
         alert('Chat system is not available. Please refresh the page.');
     }
+}
+
+// Open conversation by ID (for creator picking from conversation list)
+function openConversationById(conversationId, participantId, participantName = null) {
+    if (!window.chatInterface) {
+        alert('Chat system is not available. Please refresh the page.');
+        return;
+    }
+    window.chatInterface.currentConversationId = conversationId;
+    window.chatInterface.currentParticipant = { id: participantId, name: participantName };
+    if (participantName) {
+        window.chatInterface.participantName.textContent = participantName;
+    }
+    window.chatInterface.updateParticipantStatus();
+    window.chatInterface.show();
+    window.chatInterface.loadMessages().then(() => {
+        window.chatInterface.joinConversationChannel();
+    });
 }
 </script>

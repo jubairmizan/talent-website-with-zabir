@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Events\MessageSent;
 
 class MessageController extends Controller
 {
@@ -82,7 +83,7 @@ class MessageController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error fetching messages: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching messages'
@@ -152,9 +153,7 @@ class MessageController extends Controller
                 'formatted_time' => $message->created_at->format('H:i')
             ];
 
-            // TODO: Broadcast the message to other participants using Laravel Echo
-            // This would require setting up broadcasting and websockets
-            // broadcast(new MessageSent($message, $conversation))->toOthers();
+            broadcast(new MessageSent($message, $conversation))->toOthers();
 
             return response()->json([
                 'success' => true,
@@ -164,7 +163,7 @@ class MessageController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error sending message: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to send message. Please try again.'
@@ -218,7 +217,7 @@ class MessageController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error marking messages as read: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unable to mark messages as read.'
@@ -254,7 +253,7 @@ class MessageController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error getting unread count: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error getting unread count'
@@ -294,7 +293,7 @@ class MessageController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error getting total unread count: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error getting unread count'

@@ -16,3 +16,20 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+
+Broadcast::channel('message.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});
+
+Broadcast::channel('online', function($user) {
+    return $user->only(['id', 'name', 'role']);
+});
+
+Broadcast::channel('conversation.{id}', function ($user, $id) {
+    $conversation = \App\Models\Conversation::find($id);
+    if (!$conversation) {
+        return false;
+    }
+    return (int) $conversation->member_id === (int) $user->id || (int) $conversation->creator_id === (int) $user->id;
+});
