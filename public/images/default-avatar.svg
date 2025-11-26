@@ -1,0 +1,22 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg-muted { fill: hsl(210, 40%, 96%); }
+      .text-muted-foreground { fill: hsl(215.4, 16.3%, 46.9%); }
+      .dark .bg-muted { fill: hsl(217.2, 32.6%, 17.5%); }
+      .dark .text-muted-foreground { fill: hsl(215, 20.2%, 65.1%); }
+    </style>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="50" class="bg-muted"/>
+  
+  <!-- User icon -->
+  <g class="text-muted-foreground">
+    <!-- Head -->
+    <circle cx="50" cy="35" r="12" fill="currentColor"/>
+    
+    <!-- Body -->
+    <path d="M50 52c-12 0-22 8-22 18v8c0 2 1 3 3 3h38c2 0 3-1 3-3v-8c0-10-10-18-22-18z" fill="currentColor"/>
+  </g>
+</svg>
