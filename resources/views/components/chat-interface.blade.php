@@ -843,16 +843,29 @@ class ChatInterface {
         if (typeof Echo !== 'undefined' && this.currentConversationId) {
             Echo.private(`conversation.${this.currentConversationId}`)
                 .listen('.message.sent', (e) => {
-                    // Add new message to the conversation
-                    this.messages.push(e.message);
+                    const incoming = e && e.message ? e.message : null;
+                    if (!incoming) return;
+
+                    if (this.messages.some(m => m.id === incoming.id)) return;
+
+                    const currentUserId = window.Laravel?.user?.id;
+                    if (incoming.sender_id === currentUserId) {
+                        const tempIndex = this.messages.findIndex(m => String(m.id).startsWith('temp-') && m.sender_id === currentUserId && m.message === incoming.message);
+                        if (tempIndex !== -1) {
+                            this.messages[tempIndex] = incoming;
+                            this.renderMessages();
+                            this.scrollToBottom();
+                            return;
+                        }
+                    }
+
+                    this.messages.push(incoming);
                     this.renderMessages();
                     this.scrollToBottom();
 
-                    // Update unread count if chat is not visible
                     if (!this.isVisible) {
                         this.updateUnreadBadge(this.unreadCount + 1);
                     } else {
-                        // Mark as read if chat is visible
                         this.markMessagesAsRead();
                     }
                 });

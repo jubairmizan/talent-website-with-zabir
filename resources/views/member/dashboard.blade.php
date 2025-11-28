@@ -1124,9 +1124,12 @@
         }
 
         function openConversation(creatorId, creatorName = null) {
-            // Use the global chat interface to open conversation
             if (window.chatInterface) {
                 window.chatInterface.openConversation(creatorId, creatorName);
+                if (window._unreadByParticipant) {
+                    window._unreadByParticipant.set(Number(creatorId), 0);
+                    renderChatListFromCache();
+                }
             } else {
                 console.error('Chat interface not available');
                 alert('Chat system is loading. Please try again in a moment.');
@@ -1180,18 +1183,36 @@
                 });
         }
 
-        // Load creators and show online/offline state
+        // Load creators, show online/offline and unread count badge
         function loadActiveCreators() {
-            fetch('/api/creators/search?q=')
-                .then(response => response.json())
-                .then(creators => {
-                    const chatList = document.getElementById('chat-list');
-                    if (Array.isArray(creators) && creators.length > 0) {
-                        chatList.innerHTML = creators.map(creator => {
-                            const isOnline = onlineUsers.has(creator.id);
-                            const dot = isOnline ? 'bg-green-500' : 'bg-gray-400';
-                            const state = isOnline ? 'Online' : 'Offline';
-                            return `
+            const chatList = document.getElementById('chat-list');
+            chatList.innerHTML = '<div class="p-3 text-sm text-center text-gray-500">Laden...</div>';
+
+            Promise.all([
+                fetch('/api/creators/search?q=').then(r => r.json()),
+                fetch('/conversations', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                }).then(r => r.json()).catch(() => ({ conversations: [] }))
+            ])
+            .then(([creators, convData]) => {
+                const all = Array.isArray(creators) ? creators : [];
+                const online = all.filter(c => onlineUsers.has(c.id));
+                const offline = all.filter(c => !onlineUsers.has(c.id));
+                const convs = Array.isArray(convData.conversations) ? convData.conversations : [];
+                const unreadByParticipant = new Map(convs.map(c => [Number(c.participant_id), Number(c.unread_count || 0)]));
+                window._lastCreators = all;
+                window._unreadByParticipant = unreadByParticipant;
+                window._joinedConvIds = window._joinedConvIds || new Set();
+                window._convIdToParticipant = new Map(convs.map(c => [Number(c.id), Number(c.participant_id)]));
+
+                const renderItem = (creator, isOnline) => {
+                    const unread = unreadByParticipant.get(Number(creator.id)) || 0;
+                    const dot = isOnline ? 'bg-green-500' : 'bg-gray-400';
+                    const state = isOnline ? 'Online' : 'Offline';
+                    return `
               <div class="flex items-center p-2 rounded-md cursor-pointer hover:bg-gray-100" onclick="openConversation(${creator.id}, '${creator.name}')">
                 <div class="flex overflow-hidden relative mr-3 w-10 h-10 rounded-full shrink-0">
                   <img src="${creator.image || 'https://via.placeholder.com/40'}" alt="${creator.name}" class="object-cover w-full h-full">
@@ -1201,20 +1222,78 @@
                   <p class="text-sm font-medium truncate">${creator.name}</p>
                   <p class="text-xs text-gray-500 truncate">${state}</p>
                 </div>
+                ${unread > 0 ? `<span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-semibold text-white bg-red-500 rounded-full">${unread}</span>` : ''}
               </div>
             `;
-                        }).join('');
-                    } else {
-                        chatList.innerHTML = '<p class="p-4 text-sm text-center text-gray-500">Geen creators gevonden</p>';
-                    }
+                };
 
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('chat-list').innerHTML = '<p class="p-4 text-sm text-center text-gray-500">Fout bij het laden van creators</p>';
-                });
+                const onlineHtml = online.length ? `<div class="px-2 py-1 text-xs text-gray-500">Online</div>` + online.map(c => renderItem(c, true)).join('') : '';
+                const offlineHtml = offline.length ? `<div class="px-2 py-1 text-xs text-gray-500">Offline</div>` + offline.map(c => renderItem(c, false)).join('') : '';
+
+                if (onlineHtml || offlineHtml) {
+                    chatList.innerHTML = onlineHtml + offlineHtml;
+                } else {
+                    chatList.innerHTML = '<p class="p-4 text-sm text-center text-gray-500">Geen creators gevonden</p>';
+                }
+
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                if (typeof Echo !== 'undefined' && window.Laravel?.user?.id) {
+                    convs.forEach(c => {
+                        const convId = Number(c.id);
+                        if (window._joinedConvIds.has(convId)) return;
+                        window._joinedConvIds.add(convId);
+                        Echo.private(`conversation.${convId}`)
+                            .listen('.message.sent', (e) => {
+                                const fromOther = e?.message?.sender_id && e.message.sender_id !== window.Laravel.user.id;
+                                const isCurrentOpen = window.chatInterface && window.chatInterface.currentConversationId === convId && window.chatInterface.isVisible;
+                                if (fromOther && !isCurrentOpen) {
+                                    const participantId = window._convIdToParticipant.get(convId);
+                                    if (participantId) {
+                                        const prev = window._unreadByParticipant.get(Number(participantId)) || 0;
+                                        window._unreadByParticipant.set(Number(participantId), prev + 1);
+                                        renderChatListFromCache();
+                                    }
+                                }
+                            });
+                    });
+                }
+            })
+            .catch(() => {
+                chatList.innerHTML = '<p class="p-4 text-sm text-center text-gray-500">Fout bij het laden van creators</p>';
+            });
+        }
+
+        function renderChatListFromCache() {
+            const chatList = document.getElementById('chat-list');
+            const creators = Array.isArray(window._lastCreators) ? window._lastCreators : [];
+            const online = creators.filter(c => onlineUsers.has(c.id));
+            const offline = creators.filter(c => !onlineUsers.has(c.id));
+            const unreadByParticipant = window._unreadByParticipant || new Map();
+
+            const renderItem = (creator, isOnline) => {
+                const unread = unreadByParticipant.get(Number(creator.id)) || 0;
+                const dot = isOnline ? 'bg-green-500' : 'bg-gray-400';
+                const state = isOnline ? 'Online' : 'Offline';
+                return `
+              <div class=\"flex items-center p-2 rounded-md cursor-pointer hover:bg-gray-100\" onclick=\"openConversation(${creator.id}, '${creator.name}')\">
+                <div class=\"flex overflow-hidden relative mr-3 w-10 h-10 rounded-full shrink-0\">
+                  <img src=\"${creator.image || 'https://via.placeholder.com/40'}\" alt=\"${creator.name}\" class=\"object-cover w-full h-full\">
+                  <span class=\"absolute right-0 bottom-0 w-2.5 h-2.5 ${dot} rounded-full border-2 border-white\"></span>
+                </div>
+                <div class=\"flex-1 min-w-0\">
+                  <p class=\"text-sm font-medium truncate\">${creator.name}</p>
+                  <p class=\"text-xs text-gray-500 truncate\">${state}</p>
+                </div>
+                ${unread > 0 ? `<span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-semibold text-white bg-red-500 rounded-full">${unread}</span>` : ''}
+              </div>
+            `;
+            };
+
+            const onlineHtml = online.length ? `<div class=\"px-2 py-1 text-xs text-gray-500\">Online</div>` + online.map(c => renderItem(c, true)).join('') : '';
+            const offlineHtml = offline.length ? `<div class=\"px-2 py-1 text-xs text-gray-500\">Offline</div>` + offline.map(c => renderItem(c, false)).join('') : '';
+            chatList.innerHTML = (onlineHtml || offlineHtml) ? (onlineHtml + offlineHtml) : '<p class=\"p-4 text-sm text-center text-gray-500\">Geen creators gevonden</p>';
         }
     </script>
 
