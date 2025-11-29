@@ -300,4 +300,19 @@ class MessageController extends Controller
             ], 500);
         }
     }
+    public function unreadCount()
+{
+    // Change logic here to match your unread messages setup!
+    $count = auth()->check()
+        ? \App\Models\Message::where('sender_id', auth()->id())
+            ->where('is_read', false)
+            ->count()
+        : 0;
+
+    return response()->json([
+        'success' => true,
+        'count' => $count,
+    ]);
+}
+    
 }

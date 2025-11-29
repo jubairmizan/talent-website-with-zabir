@@ -264,6 +264,8 @@
 class ChatInterface {
     constructor() {
         this.currentConversationId = null;
+        this.lastConversationId = null;
+        this.currentConversationChannel = null;
         this.currentParticipant = null;
         this.isVisible = false;
         this.isMinimized = false;
@@ -369,6 +371,8 @@ class ChatInterface {
         this.chatInterface.classList.add('translate-y-full');
         setTimeout(() => {
             this.chatInterface.classList.add('hidden');
+            // Leave conversation channel when hiding chat
+            this.leaveConversationChannel();
         }, 300);
     }
 
@@ -413,25 +417,43 @@ class ChatInterface {
             if (window.Laravel?.user?.role === 'member') {
                 conversation = await this.getOrCreateConversation(creatorId);
             } else {
-                // For creators, find existing conversation with this participant
-                const conv = await this.findConversationWithParticipant(creatorId);
+                // For creators, find existing conversation with this participant (member)
+                let conv = await this.findConversationWithParticipant(creatorId);
                 if (!conv) {
-                    this.showNotification('No existing conversation with this member.', 'error');
-                    return;
+                    // Try to create conversation for creator with member
+                    conv = await this.getOrCreateConversationForCreator(creatorId);
                 }
                 conversation = conv;
             }
 
             if (conversation) {
+                // Leave previous conversation channel if exists
+                this.leaveConversationChannel();
+                
+                // Clear previous messages
+                this.messages = [];
+                if (this.messagesList) {
+                    this.messagesList.innerHTML = '';
+                }
+                
+                // Set new conversation
                 this.currentConversationId = conversation.id;
-                const name = conversation.creator_name || conversation.participant_name || creatorName || 'User';
+                
+                // Update participant info from conversation or use provided name
+                if (conversation.participant_id) {
+                    this.currentParticipant = { 
+                        id: conversation.participant_id, 
+                        name: conversation.participant_name || creatorName 
+                    };
+                }
+                const name = conversation.participant_name || conversation.member_name || conversation.creator_name || creatorName || 'User';
                 this.participantName.textContent = name;
                 this.updateParticipantStatus();
 
-                // Load messages for this conversation
+                // Load messages for this conversation only
                 await this.loadMessages();
 
-                // Join real-time channel
+                // Join real-time channel for this conversation only
                 this.joinConversationChannel();
 
                 this.showNotification('Chat opened successfully!', 'success');
@@ -494,6 +516,37 @@ class ChatInterface {
         }
     }
 
+    async getOrCreateConversationForCreator(memberId) {
+        try {
+            const response = await fetch('/conversations/get-or-create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ member_id: memberId })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw { response: { status: response.status, data: errorData } };
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                return data.conversation;
+            } else {
+                throw new Error(data.message || 'Failed to create conversation');
+            }
+
+        } catch (error) {
+            this.handleError(error, 'get_or_create_conversation_for_creator');
+            throw error;
+        }
+    }
+
     async loadMessages() {
         if (!this.currentConversationId) {
             this.showError('No conversation selected');
@@ -518,7 +571,21 @@ class ChatInterface {
             const data = await response.json();
 
             if (data.success) {
-                this.messages = data.messages || [];
+                // Filter messages to only include those from the current conversation
+                let messages = data.messages || [];
+                messages = messages.filter(msg => {
+                    // Ensure message belongs to current conversation
+                    if (msg.conversation_id && msg.conversation_id !== this.currentConversationId) {
+                        return false;
+                    }
+                    // Ensure message is from current user or current participant only
+                    const currentUserId = window.Laravel?.user?.id;
+                    const isFromCurrentUser = msg.sender_id === currentUserId;
+                    const isFromParticipant = msg.sender_id === this.currentParticipant?.id;
+                    return isFromCurrentUser || isFromParticipant;
+                });
+                
+                this.messages = messages;
                 this.renderMessages();
                 // Mark messages as read
                 await this.markMessagesAsRead();
@@ -538,7 +605,21 @@ class ChatInterface {
 
         const currentUserId = window.Laravel?.user?.id;
 
-        this.messagesList.innerHTML = this.messages.map(message => {
+        // Filter messages to only show those from current conversation and between current user and participant
+        const filteredMessages = this.messages.filter(message => {
+            // Filter by conversation ID if available
+            if (message.conversation_id && message.conversation_id !== this.currentConversationId) {
+                return false;
+            }
+            
+            // Only show messages from current user or current participant
+            const isFromCurrentUser = message.sender_id == currentUserId;
+            const isFromParticipant = this.currentParticipant && message.sender_id == this.currentParticipant.id;
+            
+            return isFromCurrentUser || isFromParticipant;
+        });
+
+        this.messagesList.innerHTML = filteredMessages.map(message => {
             const isSent = message.sender_id == currentUserId;
             const messageClass = isSent ? 'sent' : 'received';
             const timeAgo = this.formatTimeAgo(new Date(message.created_at));
@@ -560,6 +641,12 @@ class ChatInterface {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
+        
+        // Update messages array to only contain filtered messages
+        this.messages = filteredMessages;
+        
+        // Scroll to bottom after rendering
+        this.scrollToBottom();
     }
 
     async sendMessage(e) {
@@ -849,16 +936,51 @@ class ChatInterface {
         }
     }
 
+    leaveConversationChannel() {
+        if (this.lastConversationId && typeof Echo !== 'undefined') {
+            try {
+                Echo.leave(`conversation.${this.lastConversationId}`);
+            } catch (e) {
+                console.warn('Error leaving conversation channel:', e);
+            }
+            this.currentConversationChannel = null;
+            this.lastConversationId = null;
+        }
+    }
+
     joinConversationChannel() {
+        // Leave previous channel first
+        if (this.lastConversationId && this.lastConversationId !== this.currentConversationId) {
+            this.leaveConversationChannel();
+        }
+        
         if (typeof Echo !== 'undefined' && this.currentConversationId) {
-            Echo.private(`conversation.${this.currentConversationId}`)
+            const channelName = `conversation.${this.currentConversationId}`;
+            this.lastConversationId = this.currentConversationId;
+            
+            this.currentConversationChannel = Echo.private(channelName)
                 .listen('.message.sent', (e) => {
                     const incoming = e && e.message ? e.message : null;
                     if (!incoming) return;
+                    
+                    // Only process messages for the current conversation
+                    if (incoming.conversation_id && incoming.conversation_id !== this.currentConversationId) {
+                        return; // Ignore messages from other conversations
+                    }
 
+                    // Check if message already exists
                     if (this.messages.some(m => m.id === incoming.id)) return;
 
                     const currentUserId = window.Laravel?.user?.id;
+                    
+                    // Only show messages between current user and the participant
+                    const isFromParticipant = incoming.sender_id === this.currentParticipant?.id;
+                    const isFromCurrentUser = incoming.sender_id === currentUserId;
+                    
+                    if (!isFromParticipant && !isFromCurrentUser) {
+                        return; // Ignore messages from other users
+                    }
+                    
                     if (incoming.sender_id === currentUserId) {
                         const tempIndex = this.messages.findIndex(m => String(m.id).startsWith('temp-') && m.sender_id === currentUserId && m.message === incoming.message);
                         if (tempIndex !== -1) {

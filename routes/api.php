@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::get('/search-members', [\App\Http\Controllers\MembersController::class, 'search']);
 
 // Public search endpoint
 Route::get('/creators/search', [App\Http\Controllers\TalentsController::class, 'search']);

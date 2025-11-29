@@ -165,6 +165,45 @@
                         </div>
                     </div>
 
+                            <!-- Facebook-style Chat Button for creator dashboard -->
+<button id="messages-toggle" onclick="toggleMessagesPanelOne()"
+    class="fixed bottom-4 right-4 z-[100] bg-gradient-to-r from-pink-500 to-orange-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+    <i data-lucide="message-circle" class="w-6 h-6"></i>
+</button>
+
+<!-- Facebook-style Chat Panel (Initially Hidden) for creator dashboard -->
+<div id="messages-panel-one"
+    class="fixed bottom-20 right-4 w-80 bg-white rounded-lg shadow-xl z-[100] hidden transform translate-y-full transition-all duration-300 ease-in-out">
+    <div class="flex flex-col h-[500px] border border-gray-200 rounded-lg">
+        <!-- Header -->
+        <div class="flex justify-between items-center p-3 border-b">
+            <div>
+                <h3 class="text-lg font-semibold">Leden</h3>
+                <p class="text-xs text-gray-500">Active members</p>
+            </div>
+            <button onclick="toggleMessagesPanelOne()"
+                class="text-gray-500 transition-colors hover:text-gray-700">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <!-- Search -->
+        <div class="p-3 border-b">
+            <div class="relative">
+                <input type="text" id="creator-chat-search" placeholder="Zoek leden..."
+                    class="py-1 pr-3 pl-8 w-full text-sm rounded-full border focus:outline-none focus:ring-1 focus:ring-pink-500">
+                <i data-lucide="search"
+                    class="absolute left-2 top-1/2 w-4 h-4 text-gray-400 transform -translate-y-1/2"></i>
+            </div>
+        </div>
+        <!-- Member List -->
+        <div class="overflow-y-auto flex-1 p-2">
+            <div id="chat-list-one" class="space-y-1">
+                <!-- Active members will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
                     <!-- Recent Activity -->
                     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         <div class="rounded-lg border shadow-sm bg-card text-card-foreground">
@@ -970,7 +1009,6 @@
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
             }
-        });
 
         function toggleMessagesPanel() {
             const panel = document.getElementById('messages-panel');
@@ -1065,8 +1103,174 @@
             }
         }
 
-        })
     </script>
+
+<script>
+function toggleMessagesPanelOne() {
+    var panel = document.getElementById('messages-panel-one');
+    if (!panel) return;
+    
+    if (panel.classList.contains('hidden')) {
+        // Panel is opening - load all members
+        panel.classList.remove('hidden');
+        setTimeout(function(){ 
+            panel.classList.remove('translate-y-full');
+            // Load all members when panel opens
+            if (typeof loadMembers === 'function') {
+                loadMembers('');
+            }
+        }, 10);
+    } else {
+        // Panel is closing
+        panel.classList.add('translate-y-full');
+        setTimeout(function(){ 
+            panel.classList.add('hidden');
+        }, 300);
+    }
+}
+</script>
+
+<script>
+// Debounce helper to avoid too many requests
+function debounce(func, wait = 300) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+// Function to load and render members
+function loadMembers(query = '') {
+    const list = document.getElementById('chat-list-one');
+    if (!list) return;
+    
+    list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Laden...</div>';
+
+    fetch('/api/search-members?q=' + encodeURIComponent(query))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch members');
+            }
+            return response.json();
+        })
+        .then(data => {
+            list.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Geen leden gevonden.</div>';
+                return;
+            }
+
+            // Separate online and offline members
+            const online = data.filter(member => member.online === true);
+            const offline = data.filter(member => member.online !== true);
+
+            // Render function
+            const renderMember = (member) => {
+                const statusDot = member.online ? 'bg-green-400' : 'bg-gray-300';
+                const statusText = member.online ? 'Online' : 'Offline';
+                const statusColor = member.online ? 'text-green-500' : 'text-gray-400';
+                const memberName = member.name || 'Unknown';
+                const memberId = member.id;
+                
+                return `
+                    <div data-member-id="${memberId}" data-member-name="${memberName.replace(/"/g, '&quot;')}" 
+                         class="member-item flex items-center space-x-3 hover:bg-gray-100 rounded-lg p-2 transition cursor-pointer">
+                        <div class="relative flex-shrink-0">
+                            <img src="${member.image || '/images/default-avatar.svg'}" 
+                                class="w-10 h-10 rounded-full object-cover border border-gray-200" 
+                                alt="${memberName.replace(/"/g, '&quot;')}"
+                                onerror="this.src='/images/default-avatar.svg'">
+                            <span class="absolute bottom-0 right-0 block w-3 h-3 rounded-full border-2 border-white ${statusDot}"></span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${memberName}</div>
+                            <div class="text-xs mt-1 ${statusColor}">${statusText}</div>
+                        </div>
+                    </div>
+                `;
+            };
+
+            // Render online members first, then offline
+            let html = '';
+            
+            if (online.length > 0) {
+                html += '<div class="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">Online</div>';
+                online.forEach(member => {
+                    html += renderMember(member);
+                });
+            }
+            
+            if (offline.length > 0) {
+                if (online.length > 0) {
+                    html += '<div class="px-2 py-1 mt-2 text-xs font-semibold text-gray-500 uppercase">Offline</div>';
+                }
+                offline.forEach(member => {
+                    html += renderMember(member);
+                });
+            }
+
+            list.innerHTML = html;
+            
+            // Attach click handlers to member items using event delegation
+            list.querySelectorAll('.member-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const memberId = parseInt(this.getAttribute('data-member-id'));
+                    const memberName = this.getAttribute('data-member-name');
+                    openChatWithMember(memberId, memberName);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading members:', error);
+            list.innerHTML = '<div class="text-red-500 text-sm p-4 text-center">Fout bij het laden van leden.</div>';
+        });
+}
+
+// Initialize search functionality when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('creator-chat-search');
+    
+    if (!searchInput) {
+        console.warn('Search input not found');
+        return;
+    }
+
+    // Debounced search function
+    const debouncedSearch = debounce(function(e) {
+        const query = e.target.value.trim();
+        loadMembers(query);
+    }, 300);
+
+    // Attach event listener to search input
+    searchInput.addEventListener('input', debouncedSearch);
+});
+
+// Function to open chat with a member
+function openChatWithMember(memberId, memberName) {
+    // Close the messages panel
+    const panel = document.getElementById('messages-panel-one');
+    if (panel && !panel.classList.contains('hidden')) {
+        toggleMessagesPanelOne();
+    }
+    
+    // Wait a bit for panel to close, then open chat
+    setTimeout(function() {
+        // Use the global openConversation function from chat-interface
+        // For creators, this function finds existing conversation with the member
+        if (typeof openConversation === 'function') {
+            openConversation(memberId, memberName);
+        } else if (window.chatInterface && typeof window.chatInterface.openConversation === 'function') {
+            // Fallback: call directly if global function not available yet
+            window.chatInterface.openConversation(memberId, memberName);
+        } else {
+            console.error('Chat interface not available. Please refresh the page.');
+            alert('Chat interface not available. Please refresh the page.');
+        }
+    }, 300); // Wait for panel close animation
+}
+</script>
 
     <x-chat-interface />
 @endsection

@@ -13,39 +13,87 @@ class ConversationController extends Controller
 {
     /**
      * Get or create a conversation between member and creator
+     * Supports both members initiating with creators and creators initiating with members
      */
     public function getOrCreate(Request $request)
     {
         try {
-            $request->validate([
-                'creator_id' => 'required|exists:users,id'
-            ]);
-
-            $creatorId = $request->creator_id;
-            $memberId = Auth::id();
-
-            // Verify the target user is actually a creator
-            $creator = User::findOrFail($creatorId);
-            if (!$creator->isCreator()) {
+            $user = Auth::user();
+            $creatorId = null;
+            $memberId = null;
+            
+            // Handle different request formats
+            if ($request->has('creator_id')) {
+                // Member initiating conversation with creator
+                $request->validate([
+                    'creator_id' => 'required|exists:users,id'
+                ]);
+                
+                $creatorId = $request->creator_id;
+                $memberId = $user->id;
+                
+                // Verify the target user is actually a creator
+                $creator = User::findOrFail($creatorId);
+                if (!$creator->isCreator()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only start conversations with creators.'
+                    ], 400);
+                }
+                
+                // Verify the current user is a member
+                if (!$user->isMember()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Only members can initiate conversations with creators.'
+                    ], 403);
+                }
+                
+                // Check if creator is active
+                if (!$creator->isActive()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This creator is currently unavailable.'
+                    ], 400);
+                }
+                
+            } elseif ($request->has('member_id')) {
+                // Creator initiating conversation with member
+                $request->validate([
+                    'member_id' => 'required|exists:users,id'
+                ]);
+                
+                $memberId = $request->member_id;
+                $creatorId = $user->id;
+                
+                // Verify the target user is actually a member
+                $member = User::findOrFail($memberId);
+                if (!$member->isMember()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only start conversations with members.'
+                    ], 400);
+                }
+                
+                // Verify the current user is a creator
+                if (!$user->isCreator()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Only creators can initiate conversations with members.'
+                    ], 403);
+                }
+                
+                // Check if member is active
+                if (!$member->isActive()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This member is currently unavailable.'
+                    ], 400);
+                }
+            } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You can only start conversations with creators.'
-                ], 400);
-            }
-
-            // Verify the current user is a member
-            if (!Auth::user()->isMember()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Only members can initiate conversations with creators.'
-                ], 403);
-            }
-
-            // Check if creator is active
-            if (!$creator->isActive()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This creator is currently unavailable.'
+                    'message' => 'Either creator_id or member_id is required.'
                 ], 400);
             }
 
@@ -72,13 +120,21 @@ class ConversationController extends Controller
                 ], 403);
             }
 
+            // Get participant details for response
+            $participant = $creatorId === $user->id 
+                ? User::find($memberId) 
+                : User::find($creatorId);
+
             return response()->json([
                 'success' => true,
                 'conversation' => [
                     'id' => $conversation->id,
                     'creator_id' => $conversation->creator_id,
-                    'creator_name' => $creator->name,
+                    'creator_name' => User::find($conversation->creator_id)->name ?? 'Unknown',
                     'member_id' => $conversation->member_id,
+                    'member_name' => User::find($conversation->member_id)->name ?? 'Unknown',
+                    'participant_id' => $participant->id ?? null,
+                    'participant_name' => $participant->name ?? 'Unknown',
                     'last_message_at' => $conversation->last_message_at,
                     'is_blocked' => $conversation->is_blocked
                 ]

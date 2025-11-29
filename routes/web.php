@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\MessageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TalentsController;
 use App\Http\Controllers\AboutController;
@@ -170,3 +171,6 @@ Route::middleware([
         Route::get('/availability/user', [App\Http\Controllers\AvailabilityController::class, 'getUserAvailability'])->name('availability.user');
     });
 });
+
+
+Route::get('/messages/unread-count', [MessageController::class, 'unreadCount'])->name('messages.unread-count');
