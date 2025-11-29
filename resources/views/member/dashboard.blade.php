@@ -1295,6 +1295,16 @@
             const offlineHtml = offline.length ? `<div class=\"px-2 py-1 text-xs text-gray-500\">Offline</div>` + offline.map(c => renderItem(c, false)).join('') : '';
             chatList.innerHTML = (onlineHtml || offlineHtml) ? (onlineHtml + offlineHtml) : '<p class=\"p-4 text-sm text-center text-gray-500\">Geen creators gevonden</p>';
         }
+
+        // Clear badge in list when chat marks messages as read
+        window.addEventListener('conversation:read', (e) => {
+            const participantId = Number(e.detail?.participantId);
+            if (!participantId) return;
+            if (window._unreadByParticipant) {
+                window._unreadByParticipant.set(participantId, 0);
+                renderChatListFromCache();
+            }
+        });
     </script>
 
     <!-- Chat Interface for authenticated users -->

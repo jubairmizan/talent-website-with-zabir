@@ -706,7 +706,7 @@ class ChatInterface {
         if (!this.currentConversationId) return;
 
         try {
-            await fetch(`/conversations/${this.currentConversationId}/messages/mark-read`, {
+            const res = await fetch(`/conversations/${this.currentConversationId}/messages/mark-read`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -716,6 +716,16 @@ class ChatInterface {
 
             // Update unread count
             this.loadUnreadCount();
+
+            // Notify other UI (e.g., member dashboard list) to clear per-creator badge
+            try {
+                window.dispatchEvent(new CustomEvent('conversation:read', {
+                    detail: {
+                        conversationId: this.currentConversationId,
+                        participantId: this.currentParticipant?.id
+                    }
+                }));
+            } catch (e) {}
 
         } catch (error) {
             console.error('Error marking messages as read:', error);
