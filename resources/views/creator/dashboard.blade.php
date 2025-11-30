@@ -940,6 +940,38 @@
             color: #374151;
             border-color: #d1d5db;
         }
+
+        /* Unread badge styles */
+        [class*="unread-badge-"] {
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Smooth transitions for chat list items */
+        #chat-list > div {
+            transition: all 0.2s ease;
+        }
+
+        #chat-list > div:hover {
+            transform: translateX(2px);
+        }
+
+        /* Smooth transitions for member list items */
+        #chat-list-one > div.member-item {
+            transition: all 0.2s ease;
+        }
+
+        #chat-list-one > div.member-item:hover {
+            transform: translateX(2px);
+        }
     </style>
 
     <script>
@@ -1041,8 +1073,22 @@
         function openConversationFromList(conversationId, participantId, participantName) {
             if (typeof openConversationById === 'function') {
                 openConversationById(conversationId, participantId, participantName);
+                
+                // Remove unread badge immediately for this conversation
+                removeUnreadBadgeForConversation(conversationId);
             }
             toggleMessagesPanel();
+        }
+
+        function removeUnreadBadgeForConversation(conversationId) {
+            // Find and update the conversation item in the list
+            const chatList = document.getElementById('chat-list');
+            if (!chatList) return;
+            
+            // Reload the conversation list to update badges
+            setTimeout(() => {
+                loadCreatorConversations();
+            }, 500);
         }
 
         async function loadCreatorConversations() {
@@ -1078,18 +1124,22 @@
                     const avatar = c.participant_avatar ? ('/storage/' + c.participant_avatar) : ('https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(name));
 
                     return `
-                        <div class="flex gap-3 items-center p-2 rounded cursor-pointer hover:bg-gray-50"
-                             onclick="openConversationFromList(${c.id}, ${c.participant_id}, '${name}')">
-                            <div class="flex overflow-hidden relative w-8 h-8 rounded-full shrink-0">
-                                <img src="${avatar}" alt="${name}" class="w-full h-full aspect-square" />
+                        <div class="flex gap-3 items-center p-3 rounded-lg cursor-pointer transition-all hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                             onclick="openConversationFromList(${c.id}, ${c.participant_id}, '${name}')"
+                             data-conversation-id="${c.id}"
+                             data-participant-id="${c.participant_id}">
+                            <div class="flex overflow-hidden relative w-10 h-10 rounded-full shrink-0">
+                                <img src="${avatar}" alt="${name}" class="w-full h-full object-cover" />
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-center">
-                                    <p class="text-sm font-semibold truncate">${name}</p>
-                                    ${unread > 0 ? `<span class="inline-flex items-center px-2 py-0.5 ml-2 text-xs font-semibold text-white bg-red-500 rounded-full">${unread}</span>` : ''}
+                                <div class="flex justify-between items-start gap-2">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold truncate text-gray-900">${name}</p>
+                                        <p class="text-xs text-gray-600 truncate mt-0.5">${lastMsg}</p>
+                                    </div>
+                                    ${unread > 0 ? `<span class="unread-badge-${c.id} flex-shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full shadow-sm">${unread > 99 ? '99+' : unread}</span>` : ''}
                                 </div>
-                                <p class="text-xs text-gray-600 truncate">${lastMsg}</p>
-                                <span class="text-[10px] text-gray-400">${lastAt}</span>
+                                <span class="text-[10px] text-gray-400 mt-1 block">${lastAt}</span>
                             </div>
                         </div>
                     `;
@@ -1101,6 +1151,49 @@
             } catch (e) {
                 chatList.innerHTML = '<p class="p-4 text-sm text-center text-gray-500">Fout bij het laden van leden</p>';
             }
+        }
+
+        // Listen for conversation read events to update badges
+        window.addEventListener('conversation:read', function(event) {
+            const detail = event.detail;
+            if (detail && detail.conversationId) {
+                // Remove the badge for this conversation with animation
+                const badge = document.querySelector(`.unread-badge-${detail.conversationId}`);
+                if (badge) {
+                    // Add fade out animation
+                    badge.style.transition = 'all 0.3s ease-out';
+                    badge.style.transform = 'scale(0)';
+                    badge.style.opacity = '0';
+                    
+                    // Remove after animation completes
+                    setTimeout(() => {
+                        badge.remove();
+                    }, 300);
+                }
+            }
+        });
+
+        // Auto-refresh conversation list periodically to update unread counts
+        setInterval(function() {
+            const messagesPanel = document.getElementById('messages-panel');
+            if (messagesPanel && !messagesPanel.classList.contains('hidden')) {
+                loadCreatorConversations();
+            }
+        }, 30000); // Refresh every 30 seconds when panel is open
+
+        // Listen for new messages via Echo (if available)
+        if (typeof Echo !== 'undefined' && window.Laravel && window.Laravel.user) {
+            const userId = window.Laravel.user.id;
+            
+            // Listen for new message notifications
+            Echo.private(`App.Models.User.${userId}`)
+                .notification((notification) => {
+                    // Refresh conversation list when new message arrives
+                    const messagesPanel = document.getElementById('messages-panel');
+                    if (messagesPanel && !messagesPanel.classList.contains('hidden')) {
+                        loadCreatorConversations();
+                    }
+                });
         }
 
     </script>
@@ -1140,92 +1233,115 @@ function debounce(func, wait = 300) {
     };
 }
 
-// Function to load and render members
-function loadMembers(query = '') {
+// Function to load and render members with unread counts
+async function loadMembers(query = '') {
     const list = document.getElementById('chat-list-one');
     if (!list) return;
     
     list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Laden...</div>';
 
-    fetch('/api/search-members?q=' + encodeURIComponent(query))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch members');
+    try {
+        // Fetch members
+        const membersResponse = await fetch('/api/search-members?q=' + encodeURIComponent(query));
+        if (!membersResponse.ok) {
+            throw new Error('Failed to fetch members');
+        }
+        const members = await membersResponse.json();
+        
+        // Fetch conversations to get unread counts
+        const conversationsResponse = await fetch('/conversations', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
-            return response.json();
-        })
-        .then(data => {
-            list.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Geen leden gevonden.</div>';
-                return;
-            }
-
-            // Separate online and offline members
-            const online = data.filter(member => member.online === true);
-            const offline = data.filter(member => member.online !== true);
-
-            // Render function
-            const renderMember = (member) => {
-                const statusDot = member.online ? 'bg-green-400' : 'bg-gray-300';
-                const statusText = member.online ? 'Online' : 'Offline';
-                const statusColor = member.online ? 'text-green-500' : 'text-gray-400';
-                const memberName = member.name || 'Unknown';
-                const memberId = member.id;
-                
-                return `
-                    <div data-member-id="${memberId}" data-member-name="${memberName.replace(/"/g, '&quot;')}" 
-                         class="member-item flex items-center space-x-3 hover:bg-gray-100 rounded-lg p-2 transition cursor-pointer">
-                        <div class="relative flex-shrink-0">
-                            <img src="${member.image || '/images/default-avatar.svg'}" 
-                                class="w-10 h-10 rounded-full object-cover border border-gray-200" 
-                                alt="${memberName.replace(/"/g, '&quot;')}"
-                                onerror="this.src='/images/default-avatar.svg'">
-                            <span class="absolute bottom-0 right-0 block w-3 h-3 rounded-full border-2 border-white ${statusDot}"></span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-medium text-sm truncate">${memberName}</div>
-                            <div class="text-xs mt-1 ${statusColor}">${statusText}</div>
-                        </div>
-                    </div>
-                `;
-            };
-
-            // Render online members first, then offline
-            let html = '';
-            
-            if (online.length > 0) {
-                html += '<div class="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">Online</div>';
-                online.forEach(member => {
-                    html += renderMember(member);
-                });
-            }
-            
-            if (offline.length > 0) {
-                if (online.length > 0) {
-                    html += '<div class="px-2 py-1 mt-2 text-xs font-semibold text-gray-500 uppercase">Offline</div>';
-                }
-                offline.forEach(member => {
-                    html += renderMember(member);
-                });
-            }
-
-            list.innerHTML = html;
-            
-            // Attach click handlers to member items using event delegation
-            list.querySelectorAll('.member-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const memberId = parseInt(this.getAttribute('data-member-id'));
-                    const memberName = this.getAttribute('data-member-name');
-                    openChatWithMember(memberId, memberName);
-                });
-            });
-        })
-        .catch(error => {
-            console.error('Error loading members:', error);
-            list.innerHTML = '<div class="text-red-500 text-sm p-4 text-center">Fout bij het laden van leden.</div>';
         });
+        
+        let unreadMap = {};
+        if (conversationsResponse.ok) {
+            const conversationsData = await conversationsResponse.json();
+            const conversations = conversationsData.conversations || [];
+            // Create a map of member_id => unread_count
+            conversations.forEach(conv => {
+                if (conv.participant_id && conv.unread_count) {
+                    unreadMap[conv.participant_id] = conv.unread_count;
+                }
+            });
+        }
+        
+        list.innerHTML = '';
+        
+        if (!members || members.length === 0) {
+            list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Geen leden gevonden.</div>';
+            return;
+        }
+
+        // Separate online and offline members
+        const online = members.filter(member => member.online === true);
+        const offline = members.filter(member => member.online !== true);
+
+        // Render function
+        const renderMember = (member) => {
+            const statusDot = member.online ? 'bg-green-400' : 'bg-gray-300';
+            const statusText = member.online ? 'Online' : 'Offline';
+            const statusColor = member.online ? 'text-green-500' : 'text-gray-400';
+            const memberName = member.name || 'Unknown';
+            const memberId = member.id;
+            const unreadCount = unreadMap[memberId] || 0;
+            
+            return `
+                <div data-member-id="${memberId}" data-member-name="${memberName.replace(/"/g, '&quot;')}" 
+                     class="member-item flex items-center space-x-3 hover:bg-gray-100 rounded-lg p-2 transition cursor-pointer relative">
+                    <div class="relative flex-shrink-0">
+                        <img src="${member.image || '/images/default-avatar.svg'}" 
+                            class="w-10 h-10 rounded-full object-cover border border-gray-200" 
+                            alt="${memberName.replace(/"/g, '&quot;')}"
+                            onerror="this.src='/images/default-avatar.svg'">
+                        <span class="absolute bottom-0 right-0 block w-3 h-3 rounded-full border-2 border-white ${statusDot}"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="font-medium text-sm truncate">${memberName}</div>
+                            ${unreadCount > 0 ? `<span class="unread-badge-member-${memberId} flex-shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 p-2 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full shadow-sm">${unreadCount > 99 ? '99+' : unreadCount}</span>` : ''}
+                        </div>
+                        <div class="text-xs mt-1 ${statusColor}">${statusText}</div>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Render online members first, then offline
+        let html = '';
+        
+        if (online.length > 0) {
+            html += '<div class="px-2 py-1 text-xs font-semibold text-gray-500 uppercase">Online</div>';
+            online.forEach(member => {
+                html += renderMember(member);
+            });
+        }
+        
+        if (offline.length > 0) {
+            if (online.length > 0) {
+                html += '<div class="px-2 py-1 mt-2 text-xs font-semibold text-gray-500 uppercase">Offline</div>';
+            }
+            offline.forEach(member => {
+                html += renderMember(member);
+            });
+        }
+
+        list.innerHTML = html;
+        
+        // Attach click handlers to member items using event delegation
+        list.querySelectorAll('.member-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const memberId = parseInt(this.getAttribute('data-member-id'));
+                const memberName = this.getAttribute('data-member-name');
+                openChatWithMember(memberId, memberName);
+            });
+        });
+    } catch (error) {
+        console.error('Error loading members:', error);
+        list.innerHTML = '<div class="text-red-500 text-sm p-4 text-center">Fout bij het laden van leden.</div>';
+    }
 }
 
 // Initialize search functionality when DOM is ready
@@ -1249,6 +1365,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Function to open chat with a member
 function openChatWithMember(memberId, memberName) {
+    // Remove badge immediately with animation
+    const badge = document.querySelector(`.unread-badge-member-${memberId}`);
+    if (badge) {
+        badge.style.transition = 'all 0.3s ease-out';
+        badge.style.transform = 'scale(0)';
+        badge.style.opacity = '0';
+        setTimeout(() => {
+            if (badge.parentElement) badge.remove();
+        }, 300);
+    }
+    
     // Close the messages panel
     const panel = document.getElementById('messages-panel-one');
     if (panel && !panel.classList.contains('hidden')) {
@@ -1270,6 +1397,33 @@ function openChatWithMember(memberId, memberName) {
         }
     }, 300); // Wait for panel close animation
 }
+
+// Auto-refresh members list periodically to update unread counts
+setInterval(function() {
+    const messagesPanel = document.getElementById('messages-panel-one');
+    if (messagesPanel && !messagesPanel.classList.contains('hidden')) {
+        const searchInput = document.getElementById('creator-chat-search');
+        const query = searchInput ? searchInput.value.trim() : '';
+        loadMembers(query);
+    }
+}, 30000); // Refresh every 30 seconds when panel is open
+
+// Listen for conversation read events to update member badges
+window.addEventListener('conversation:read', function(event) {
+    const detail = event.detail;
+    if (detail && detail.participantId) {
+        // Remove the badge for this member
+        const badge = document.querySelector(`.unread-badge-member-${detail.participantId}`);
+        if (badge) {
+            badge.style.transition = 'all 0.3s ease-out';
+            badge.style.transform = 'scale(0)';
+            badge.style.opacity = '0';
+            setTimeout(() => {
+                if (badge.parentElement) badge.remove();
+            }, 300);
+        }
+    }
+});
 </script>
 
     <x-chat-interface />

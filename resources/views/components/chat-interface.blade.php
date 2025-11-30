@@ -281,6 +281,7 @@ class ChatInterface {
         this.setupAutoResize();
         this.loadUnreadCount();
         this.setupNetworkMonitoring();
+        this.startUnreadCountPolling();
 
         // Initialize Echo for real-time messaging (if available)
         if (typeof Echo !== 'undefined') {
@@ -363,6 +364,11 @@ class ChatInterface {
 
         if (!this.currentConversationId && window.Laravel?.user?.role === 'creator') {
             this.openLatestConversationForCreator();
+        }
+
+        // Mark messages as read when chat is opened
+        if (this.currentConversationId) {
+            this.markMessagesAsRead();
         }
     }
 
@@ -455,6 +461,9 @@ class ChatInterface {
 
                 // Join real-time channel for this conversation only
                 this.joinConversationChannel();
+
+                // Update unread count after opening conversation
+                await this.loadUnreadCount();
 
                 this.showNotification('Chat opened successfully!', 'success');
             }
@@ -801,18 +810,28 @@ class ChatInterface {
                 }
             });
 
-            // Update unread count
-            this.loadUnreadCount();
+            if (res.ok) {
+                // Update unread count immediately
+                await this.loadUnreadCount();
 
-            // Notify other UI (e.g., member dashboard list) to clear per-creator badge
-            try {
-                window.dispatchEvent(new CustomEvent('conversation:read', {
-                    detail: {
-                        conversationId: this.currentConversationId,
-                        participantId: this.currentParticipant?.id
+                // Update local messages to mark them as read
+                this.messages.forEach(msg => {
+                    if (msg.sender_id !== window.Laravel?.user?.id) {
+                        msg.is_read = true;
                     }
-                }));
-            } catch (e) {}
+                });
+                this.renderMessages();
+
+                // Notify other UI (e.g., member dashboard list) to clear per-creator badge
+                try {
+                    window.dispatchEvent(new CustomEvent('conversation:read', {
+                        detail: {
+                            conversationId: this.currentConversationId,
+                            participantId: this.currentParticipant?.id
+                        }
+                    }));
+                } catch (e) {}
+            }
 
         } catch (error) {
             console.error('Error marking messages as read:', error);
@@ -836,6 +855,23 @@ class ChatInterface {
 
         } catch (error) {
             console.error('Error loading unread count:', error);
+        }
+    }
+
+    startUnreadCountPolling() {
+        // Poll for unread count every 30 seconds
+        this.unreadCountInterval = setInterval(() => {
+            if (!this.isVisible) {
+                // Only poll when chat is not visible to avoid unnecessary requests
+                this.loadUnreadCount();
+            }
+        }, 30000);
+    }
+
+    stopUnreadCountPolling() {
+        if (this.unreadCountInterval) {
+            clearInterval(this.unreadCountInterval);
+            this.unreadCountInterval = null;
         }
     }
 
@@ -908,6 +944,18 @@ class ChatInterface {
         }
 
         console.log('Echo real-time messaging ready');
+
+        // Listen for new messages globally to update unread count
+        const userId = window.Laravel?.user?.id;
+        if (userId) {
+            Echo.private(`App.Models.User.${userId}`)
+                .notification((notification) => {
+                    // Update unread count when new message notification arrives
+                    if (notification.type === 'App\\Notifications\\NewMessage') {
+                        this.loadUnreadCount();
+                    }
+                });
+        }
     }
 
     initializePresence() {
@@ -995,9 +1043,11 @@ class ChatInterface {
                     this.renderMessages();
                     this.scrollToBottom();
 
-                    if (!this.isVisible) {
-                        this.updateUnreadBadge(this.unreadCount + 1);
+                    if (!this.isVisible || this.isMinimized) {
+                        // Update unread count from server
+                        this.loadUnreadCount();
                     } else {
+                        // Mark as read if chat is visible and not minimized
                         this.markMessagesAsRead();
                     }
                 });

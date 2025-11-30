@@ -301,18 +301,42 @@ class MessageController extends Controller
         }
     }
     public function unreadCount()
-{
-    // Change logic here to match your unread messages setup!
-    $count = auth()->check()
-        ? \App\Models\Message::where('sender_id', auth()->id())
-            ->where('is_read', false)
-            ->count()
-        : 0;
+    {
+        try {
+            if (!auth()->check()) {
+                return response()->json([
+                    'success' => true,
+                    'count' => 0,
+                ]);
+            }
 
-    return response()->json([
-        'success' => true,
-        'count' => $count,
-    ]);
-}
+            $user = auth()->user();
+            
+            // Get all conversations where user is a participant
+            $conversationIds = Conversation::where(function($query) use ($user) {
+                $query->where('member_id', $user->id)
+                      ->orWhere('creator_id', $user->id);
+            })->pluck('id');
+
+            // Count unread messages in these conversations that were NOT sent by the current user
+            $count = Message::whereIn('conversation_id', $conversationIds)
+                ->where('sender_id', '!=', $user->id)
+                ->where('is_read', false)
+                ->count();
+
+            return response()->json([
+                'success' => true,
+                'count' => $count,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting unread count: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'count' => 0,
+                'message' => 'Error getting unread count'
+            ], 500);
+        }
+    }
     
 }
