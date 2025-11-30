@@ -1241,8 +1241,18 @@ async function loadMembers(query = '') {
     list.innerHTML = '<div class="text-gray-500 text-sm p-4 text-center">Laden...</div>';
 
     try {
+        // Get creator ID from meta tag or use authenticated user ID
+        const creatorIdMeta = document.querySelector('meta[name="creator-id"]');
+        const creatorId = creatorIdMeta ? creatorIdMeta.getAttribute('content') : (window.Laravel && window.Laravel.user ? window.Laravel.user.id : '');
+        
         // Fetch members
-        const membersResponse = await fetch('/api/search-members?q=' + encodeURIComponent(query));
+        const membersResponse = await fetch('/api/search-members?q=' + encodeURIComponent(query) + (creatorId ? '&creator_id=' + creatorId : ''), {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            credentials: 'same-origin'
+        });
         if (!membersResponse.ok) {
             throw new Error('Failed to fetch members');
         }
@@ -1267,7 +1277,7 @@ async function loadMembers(query = '') {
                 }
             });
         }
-        
+    
         list.innerHTML = '';
         
         if (!members || members.length === 0) {

@@ -38,7 +38,7 @@
 
         <!-- Message Input -->
         <div id="message-input-container" class="p-4 bg-white border-t">
-            <form id="message-form" class="flex items-end space-x-2">
+            <form id="message-form" class="flex items-start space-x-2">
                 <div class="flex-1">
                     <textarea
                         id="message-input"
@@ -61,7 +61,7 @@
                     class="p-3 text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg transition-all duration-200 hover:from-pink-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled
                 >
-                    <i data-lucide="send" class="w-5 h-5"></i>
+                    <i data-lucide="send" class="w-5"></i>
                 </button>
             </form>
         </div>

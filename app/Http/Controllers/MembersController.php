@@ -10,9 +10,17 @@ class MembersController extends Controller
     public function search(Request $request)
     {
         $query = $request->get('q', '');
-
-        $members = User::where('role', 'member')
-            ->where('status', 'active');
+        $creatorId = $request->get('creator_id',"");
+        $members = User::where('role', 'member');
+        
+        // Filter by creator_id if provided - find members who have conversations with this creator
+        if ($creatorId) {
+            $members->whereHas('conversationsAsMember', function ($q) use ($creatorId) {
+                $q->where('creator_id', $creatorId);
+            });
+        }
+        
+        $members->where('status', 'active');
 
         // Apply search filter if query has at least 2 characters
         if (strlen($query) >= 2) {

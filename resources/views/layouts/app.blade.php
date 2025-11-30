@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="api-token" content="{{ auth()->user()->createToken('api-token')->plainTextToken }}">
+       
+        <meta name="member-id" content="{{ auth()->user()->id }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 

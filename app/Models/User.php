@@ -9,7 +9,6 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
-
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -145,6 +144,33 @@ class User extends Authenticatable
     public function hasFavorited($creatorProfileId)
     {
         return $this->favorites()->where('creator_profile_id', $creatorProfileId)->exists();
+    }
+
+    /**
+     * Get conversations where user is a member
+     */
+    public function conversationsAsMember()
+    {
+        return $this->hasMany(Conversation::class, 'member_id');
+    }
+
+    /**
+     * Get conversations where user is a creator
+     */
+    public function conversationsAsCreator()
+    {
+        return $this->hasMany(Conversation::class, 'creator_id');
+    }
+
+    /**
+     * Get all conversations for this user (as either member or creator)
+     */
+    public function conversations()
+    {
+        // This will return conversations where the user is either creator or member
+        // Note: This is a query scope approach, not a direct relationship
+        return Conversation::where('creator_id', $this->id)
+            ->orWhere('member_id', $this->id);
     }
 
     /**
